@@ -1,8 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:studentlist/Home_Screen.dart';
-import 'package:studentlist/StudentModel.dart';
-
+import 'StudentModel.dart';
 import 'DatabaseHelper.dart';
 
 class AddStudentScreen extends StatefulWidget {
@@ -10,36 +9,34 @@ class AddStudentScreen extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return _registerScreenState();
+    return _addStudentScreenState();
   }
 }
 
-class _registerScreenState extends State<AddStudentScreen> {
+class _addStudentScreenState extends State<AddStudentScreen> {
   ///Global key
   final _formkey = GlobalKey<FormState>();
 
   ///Controller
-  final _tenController = TextEditingController();
-  final _tuoiController = TextEditingController();
-  final _diemtrungbinhController = TextEditingController();
-  final _gioitinhController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _averageScoreController = TextEditingController();
+  final _genderController = TextEditingController();
 
-  /// show the password or not
-  bool _isObscure = true;
-  late DbHelper dbHelper;
+
+  late final DatabaseHelper dbHelper;
 
   @override
   void initState() {
     super.initState();
-    dbHelper = DbHelper();
   }
 
   @override
   void dispose() {
-    _tenController.dispose();
-    _tuoiController.dispose();
-    _diemtrungbinhController.dispose();
-    _gioitinhController.dispose();
+    _nameController.dispose();
+    _ageController.dispose();
+    _averageScoreController.dispose();
+    _genderController.dispose();
     super.dispose();
   }
 
@@ -90,12 +87,10 @@ class _registerScreenState extends State<AddStudentScreen> {
                           height: 70,
                           width: widthScreen,
                           child: TextFormField(
-                            controller: _tenController,
+                            controller: _nameController,
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Vui lòng nhập Họ và tên';
-                              } else if (value.length < 2) {
-                                return 'Tên phải có ít nhất 2 kí tự';
+                              if (value!.isEmpty) {
+                                return 'Vui lòng nhập tên';
                               } else {
                                 return null;
                               }
@@ -128,13 +123,10 @@ class _registerScreenState extends State<AddStudentScreen> {
                           height: 70,
                           width: widthScreen,
                           child: TextFormField(
-                            controller: _tuoiController,
+                            controller: _ageController,
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return 'Vui lòng nhập tuổi';
-                              } else if (value.length < 15 &&
-                                  value.length > 20) {
-                                return 'Tuổi không hợp lệ';
                               } else {
                                 return null;
                               }
@@ -167,12 +159,10 @@ class _registerScreenState extends State<AddStudentScreen> {
                           height: 70,
                           width: widthScreen,
                           child: TextFormField(
-                            controller: _diemtrungbinhController,
+                            controller: _averageScoreController,
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Vui lòng nhập điểm trung bình của học sinh';
-                              } else if (value.length < 0 && value.length > 10) {
-                                return 'Điểm không hợp lệ. Vui lòng nhập lại';
+                              if (value!.isEmpty) {
+                                return 'Vui lòng nhập điểm trung bình';
                               } else {
                                 return null;
                               }
@@ -205,12 +195,10 @@ class _registerScreenState extends State<AddStudentScreen> {
                           height: 70,
                           width: widthScreen,
                           child: TextFormField(
-                            controller: _gioitinhController,
+                            controller: _genderController,
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return 'Vui lòng nhập giới tính';
-                              } else if (value !=  'Nam' && value !=  'Nữ') {
-                                return 'Giới tính không hợp lệ';
                               } else {
                                 return null;
                               }
@@ -242,9 +230,15 @@ class _registerScreenState extends State<AddStudentScreen> {
 
                         TextButton(
                             onPressed: () async {
-                              if (_formkey.currentState!.validate()) {
-                                _signup();
-                              }
+                               dbHelper.createStudent(StudentModel(
+                                   studentName: _nameController.text,
+                                   studentAge: _ageController.text,
+                                   studentGender: _genderController.text,
+                                   averageScore: _averageScoreController.text,
+                                   createAt: DateTime.now().toIso8601String())).whenComplete((){
+                                     Navigator.of(context).pop(true);
+                               });
+                                print('Quang Huy');
                             },
                             style: TextButton.styleFrom(
                                 backgroundColor: Colors.blue,
@@ -273,21 +267,6 @@ class _registerScreenState extends State<AddStudentScreen> {
     );
   }
 
-  Future<void> _signup() async {
-    String id = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
-    final hs = Student(
-      id: id,
-      ten: _tenController.text,
-      tuoi: _tuoiController.text,
-      diemTrungBinh: _diemtrungbinhController.text,
-      gioiTinh: _gioitinhController.text,);
-    try {
-      await DbHelper.saveData(hs);
 
-      Navigator.pop(context, MaterialPageRoute(builder: (context) => HomeScreen()));
-    } catch (e) {
-      // Handle the error, e.g., show an error message
-    }
-  }
 
 }

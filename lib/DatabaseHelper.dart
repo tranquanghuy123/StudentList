@@ -1,111 +1,48 @@
-import 'dart:io';
-import 'package:sqflite/sqflite.dart';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart';
-import 'dart:io' as io;
+import 'package:sqflite/sqflite.dart';
 import 'StudentModel.dart';
-import 'package:path_provider/path_provider.dart';
 
-class DbHelper {
-  static Database? _db;
+class DatabaseHelper{
 
-  ///Tên database
-  static const String DB_Name = 'test.db';
+  final  databaseName = 'student.db';
 
-  ///Tên bảng
-  static const String Table_Student = 'user';
-  static const int Version = 1;
+  String studentTable = "CREATE TABLE students (studentId INTEGER PRIMARY KEY AUTOINCREMENT, studentName ,TEXT NOT NULL, studentAge TEXT NOT NULL, studentGender, averageScore TEXT NOT NULL, createAt TEXT DEFAULT CURRENT_TIMESTAMP)";
 
-
-  ///Tên của column (các thuộc tính trong bảng)
-  static const String C_StudentID = 'id';
-  static const String C_StudentName = 'ten';
-  static const String C_StudentAge = 'tuoi';
-  static const String C_AverageScore = 'diemTrungBinh';
-  static const String C_Gender = 'gioiTinh';
-
-
-  ///Hàm Database (DB)
-  static Future<Database?> get db async {
-
-    if (_db != null) {
-      return _db;
-    }
-    _db =  await initDb();
-    return _db;
+  Future<Database> initDB() async{
+    final databasePath = await getDatabasesPath();
+    final path = join(databasePath, databaseName);
+    return openDatabase(path, version: 1, onCreate: (db, version) async {
+      await db.execute(studentTable);
+    });
   }
 
-  static Future<Database?> initDb() async {
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, DB_Name);
-    var db = await openDatabase(path, version: Version, onCreate: _onCreate);
-    return db;
-  }
+  /// CRUD method
 
-  static Future<void> _onCreate(Database db, int intVersion) async {
-    await db.execute("CREATE TABLE $Table_Student ("
-        " $C_StudentID TEXT, "
-        " $C_StudentName TEXT, "
-        " $C_StudentAge TEXT, "
-        " $C_AverageScore TEXT,"
-        " $C_Gender TEXT, "
-        " PRIMARY KEY ($C_StudentID)"
-        ")");
-  }
+/// Create method
 
-  static Future<int?> saveData(Student hs) async {
-    var dbClient = await db;
-    int? id = await dbClient?.insert(Table_Student, hs.toMap());
-    return id;
-  }
-
-
-
-  static Future<void> updateUser(Student hs) async {
-    var dbClient = await db;
-    var res = await dbClient?.update(Table_Student, hs.toMap(),
-        where: '$C_StudentID = ?', whereArgs: [hs.id]);
-    print(res);
-    print(hs.id);
-  }
-
-  Future<int?> deleteUser(String id) async {
-    var dbClient = await db;
-    var res = await dbClient
-        ?.delete(Table_Student, where: '$C_StudentID = ?', whereArgs: [id]);
-    return res;
-  }
-
-  Future<Student?> getUserById(String userId) async {
-    var dbClient = await db;
-    var res = await dbClient?.rawQuery("SELECT * FROM $Table_Student WHERE "
-        "$C_StudentID = '$userId'");
-
-    if (res?.isNotEmpty ?? false) {
-      return Student.fromMap(res!.first);
+    Future<int> createStudent(StudentModel student) async {
+    final Database db = await initDB();
+    return db.insert('students', student.toMap());
     }
 
-    return null;
+/// Read method
+
+  Future<List<StudentModel>> getStudent() async{
+    final Database db = await initDB();
+    List<Map<String, Object?>> result = await db.query('students');
+    return result.map((e) => StudentModel.fromMap(e)).toList();
   }
-
-  Future<List<Student>> getUserAccountFromDatabase() async {
-    var dbClient = await db;
-    final List<Map<String, dynamic>>? maps = await dbClient?.rawQuery(
-        'SELECT * FROM $Table_Student ');
-    if (maps != null) {
-      return List.generate(maps.length, (i) {
-        return Student(
-          id: maps[i]['id'],
-          ten: maps[i]['ten'],
-          tuoi: maps[i]['tuoi'],
-          diemTrungBinh: maps[i]['diemTrungBinh'],
-          gioiTinh: maps[i]['gioiTinh'],
-        );
-      });
-    } else {
-      return []; // Return an empty list if maps is null
-    }
+/// Update method
+  Future<int> updateStudent(studentName, studentAge, studentGender, averageScore, studentId) async {
+    final Database db = await initDB();
+    return db.rawUpdate('studentName = ?, studentAge = ?, studentGender = ?, averageScore = ?, studentId = ?',
+    [studentName, studentAge,studentGender, studentId]);
   }
+/// Delete method
 
+  Future<int> deleteStudent(int id) async {
+    final Database db = await initDB();
+    return db.delete('students', where: 'studentId = ?', whereArgs: [id]);
   }
-
-
+}
