@@ -4,7 +4,7 @@ class StudentModel {
   final String studentName;
   final String studentAge;
   final String studentGender;
-  final String averageScore;
+  final String studentAverageScore;
   final String createAt;
 
   StudentModel({
@@ -12,7 +12,7 @@ class StudentModel {
     required this.studentName,
     required this.studentAge,
     required this.studentGender,
-    required this.averageScore,
+    required this.studentAverageScore,
     required this.createAt,
   });
 
@@ -21,7 +21,7 @@ class StudentModel {
     studentName: json["studentName"],
     studentAge: json["studentAge"],
     studentGender: json["studentGender"],
-    averageScore: json["averageScore"],
+    studentAverageScore: json["studentAverageScore"],
     createAt: json["createAt"],
   );
 
@@ -30,7 +30,7 @@ class StudentModel {
     "studentName": studentName,
     "studentAge": studentAge,
     "studentGender": studentGender,
-    "averageScore": averageScore,
+    "studentAverageScore": studentAverageScore,
     "createAt": createAt,
   };
 }

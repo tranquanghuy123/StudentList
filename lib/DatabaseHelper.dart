@@ -3,46 +3,93 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'StudentModel.dart';
 
-class DatabaseHelper{
+class DatabaseHelper {
 
-  final  databaseName = 'student.db';
+  static Future<void> createTables(Database database) async {
+    await database.execute("""CREATE TABLE students(
+        studentId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        studentName TEXT,
+        studentAge TEXT,
+        studentGender TEXT,
+        studentAverageScore TEXT,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+      """);
 
-  String studentTable = "CREATE TABLE students (studentId INTEGER PRIMARY KEY AUTOINCREMENT, studentName ,TEXT NOT NULL, studentAge TEXT NOT NULL, studentGender, averageScore TEXT NOT NULL, createAt TEXT DEFAULT CURRENT_TIMESTAMP)";
-
-  Future<Database> initDB() async{
-    final databasePath = await getDatabasesPath();
-    final path = join(databasePath, databaseName);
-    return openDatabase(path, version: 1, onCreate: (db, version) async {
-      await db.execute(studentTable);
-    });
+      // id: the id of a student
+     // studentName, studentAge,studentGender, studentAverageScore : name, age ender, average score of a student
+    // created_at: the time that the item was created. It will be automatically handled by SQLite
   }
 
-  /// CRUD method
+  static Future<Database> db() async {
+    return openDatabase(
+      'student.db',      version: 1,
+      onCreate: (Database database, int version) async {
+        await createTables(database);
+      },
+    );
+  }
 
-/// Create method
+  ///CRUD
 
-    Future<int> createStudent(StudentModel student) async {
-    final Database db = await initDB();
-    return db.insert('students', student.toMap());
+  ///Add method
+  static Future<int> addStudent(String studentName, String studentAge, String studentGender, String studentAverageScore) async {
+    final db = await DatabaseHelper.db();
+
+    final data = {
+      'studentName': studentName,
+      'studentAge': studentAge,
+      'studentGender': studentGender,
+      'studentAverageScore': studentAverageScore,
+    };
+    final id = await db.insert('students', data,
+        conflictAlgorithm: ConflictAlgorithm.replace);
+    return id;
+  }
+
+  ///GetAllStudent method
+
+  static Future<List<Map<String, dynamic>>> getAllStudents() async {
+    final db = await DatabaseHelper.db();
+    return db.query('students', orderBy: "studentId");
+  }
+
+  ///GetStudent method
+
+  static Future<List<Map<String, dynamic>>> getStudent(int studentId) async {
+    final db = await DatabaseHelper.db();
+    return db.query('students', where: "studentId = ?", whereArgs: [studentId], limit: 1);
+  }
+
+  ///Update method
+
+  static Future<List<Map<String, dynamic>>> getSpecificStudent(int studentId) async {
+    final db = await DatabaseHelper.db();
+    return db.query('students', where: "studentId = ?", whereArgs: [studentId], limit: 1);
+  }
+
+  // Update an item by id
+  static Future<int?> updateStudent(int studentId,
+      String studentName, String studentAge, String studentGender, String studentAverageScore) async {
+    final db = await DatabaseHelper.db();
+
+    final data = {
+      'studentName': studentName,
+      'studentAge': studentAge,
+      'studentGender': studentGender,
+      'studentAverageScore': studentAverageScore,
+      'createdAt': DateTime.now().toString()
+    };
+  }
+
+  /// Delete method
+  static Future<void> deleteItem(int studentId) async {
+    final db = await DatabaseHelper.db();
+    try {
+      await db.delete("students", where: "studentId = ?", whereArgs: [studentId]);
+    } catch (error) {
+      debugPrint("Có lỗi: $error");
     }
-
-/// Read method
-
-  Future<List<StudentModel>> getStudent() async{
-    final Database db = await initDB();
-    List<Map<String, Object?>> result = await db.query('students');
-    return result.map((e) => StudentModel.fromMap(e)).toList();
   }
-/// Update method
-  Future<int> updateStudent(studentName, studentAge, studentGender, averageScore, studentId) async {
-    final Database db = await initDB();
-    return db.rawUpdate('studentName = ?, studentAge = ?, studentGender = ?, averageScore = ?, studentId = ?',
-    [studentName, studentAge,studentGender, studentId]);
-  }
-/// Delete method
 
-  Future<int> deleteStudent(int id) async {
-    final Database db = await initDB();
-    return db.delete('students', where: 'studentId = ?', whereArgs: [id]);
-  }
 }
