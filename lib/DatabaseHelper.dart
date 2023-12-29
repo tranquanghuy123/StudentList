@@ -6,15 +6,9 @@ import 'StudentModel.dart';
 class DatabaseHelper {
 
   static Future<void> createTables(Database database) async {
-    await database.execute("""CREATE TABLE students(
-        studentId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        studentName TEXT,
-        studentAge TEXT,
-        studentGender TEXT,
-        studentAverageScore TEXT,
-        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )
-      """);
+    await database.execute(
+        "CREATE TABLE students (studentId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,studentName TEXT, studentAge TEXT, studentGender TEXT, studentAverageScore TEXT,createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    );
 
       // id: the id of a student
      // studentName, studentAge,studentGender, studentAverageScore : name, age ender, average score of a student
@@ -23,7 +17,7 @@ class DatabaseHelper {
 
   static Future<Database> db() async {
     return openDatabase(
-      'student.db',      version: 1,
+      'student_mtl.db', version: 1,
       onCreate: (Database database, int version) async {
         await createTables(database);
       },
@@ -40,10 +34,9 @@ class DatabaseHelper {
       'studentName': studentName,
       'studentAge': studentAge,
       'studentGender': studentGender,
-      'studentAverageScore': studentAverageScore,
+      'studentAverageScore': studentAverageScore
     };
-    final id = await db.insert('students', data,
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    final id = await db.insert('students', data);
     return id;
   }
 
@@ -83,7 +76,7 @@ class DatabaseHelper {
   }
 
   /// Delete method
-  static Future<void> deleteItem(int studentId) async {
+  static Future<void> deleteItem(int? studentId) async {
     final db = await DatabaseHelper.db();
     try {
       await db.delete("students", where: "studentId = ?", whereArgs: [studentId]);
