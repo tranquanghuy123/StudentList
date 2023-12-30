@@ -5,6 +5,7 @@ import 'StudentModel.dart';
 
 class DatabaseHelper {
 
+
   static Future<void> createTables(Database database) async {
     await database.execute(
         "CREATE TABLE students (studentId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,studentName TEXT, studentAge TEXT, studentGender TEXT, studentAverageScore TEXT,createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
@@ -73,16 +74,19 @@ class DatabaseHelper {
       'studentAverageScore': studentAverageScore,
       'createdAt': DateTime.now().toString()
     };
+
+    final result =
+    await db.update('students', data, where: "studentId = ?", whereArgs: [studentId]);
+    return result;
   }
 
   /// Delete method
   static Future<void> deleteItem(int? studentId) async {
     final db = await DatabaseHelper.db();
     try {
-      await db.delete("students", where: "studentId = ?", whereArgs: [studentId]);
+      await db.delete("students", where: "studentId = ? ", whereArgs: [studentId]);
     } catch (error) {
       debugPrint("Có lỗi: $error");
     }
   }
-
 }
