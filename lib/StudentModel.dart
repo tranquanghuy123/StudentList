@@ -1,38 +1,36 @@
+
 class StudentModel {
-  String? studentId;
-  String? studentName;
-  String? studentAge;
-  String? studentGender;
-  String? studentAverageScore;
-  String? createAt;
+  final int? studentId;
+  final String studentName;
+  final String studentAge;
+  final String studentGender;
+  final String studentAverageScore;
+  final String createAt;
 
   StudentModel({
     this.studentId,
-    this.studentName,
-    this.studentAge,
-    this.studentGender,
-    this.studentAverageScore,
-    this.createAt,
+    required this.studentName,
+    required this.studentAge,
+    required this.studentGender,
+    required this.studentAverageScore,
+    required this.createAt,
   });
 
-  Map<String, dynamic> toMap() {
-    var map = <String, dynamic>{
-      'studentId': studentId,
-      'studentName': studentName,
-      'studentAge': studentAge,
-      'studentGender': studentGender,
-      'studentAverageScore': studentAverageScore,
-      'createAt': createAt,
-    };
-    return map;
-  }
+  factory StudentModel.fromMap(Map<String, dynamic> json) => StudentModel(
+    studentId: json["studentId"],
+    studentName: json["studentName"],
+    studentAge: json["studentAge"],
+    studentGender: json["studentGender"],
+    studentAverageScore: json["studentAverageScore"],
+    createAt: json["createAt"],
+  );
 
-  StudentModel.fromMap(Map<String, dynamic> map) {
-    studentId = map["studentId"];
-    studentName = map["studentName"];
-    studentAge = map["studentAge"];
-    studentAverageScore = map["studentAverageScore"];
-    studentGender = map["studentGender"];
-    createAt = map["createAt"];
-  }
+  Map<String, dynamic> toMap() => {
+    "studentId": studentId,
+    "studentName": studentName,
+    "studentAge": studentAge,
+    "studentGender": studentGender,
+    "studentAverageScore": studentAverageScore,
+    "createAt": createAt,
+  };
 }

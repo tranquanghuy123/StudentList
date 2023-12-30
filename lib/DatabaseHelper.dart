@@ -1,124 +1,88 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'StudentModel.dart';
 
 class DatabaseHelper {
-  static Database? _db;
 
-  ///Tên database
-  static const String DB_Name = 'student.db';
+  static Future<void> createTables(Database database) async {
+    await database.execute(
+        "CREATE TABLE students (studentId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,studentName TEXT, studentAge TEXT, studentGender TEXT, studentAverageScore TEXT,createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    );
 
-  ///Tên bảng
-  static const String Table_Student = 'students';
-  static const int Version = 1;
-
-
-  ///Tên của column (các thuộc tính trong bảng)
-  //static const int C_UserID = 1;
-  static const String C_StudentID = 'studentId';
-  static const String C_StudentName = 'studentName';
-  static const String C_StudentAge = 'studentAge';
-  static const String C_StudentGender = 'studentGender';
-  static const String C_StudentAverageScore = 'studentAverageScore';
-  static const String C_CreateAt = 'createAt';
-
-
-
-
-  ///Hàm Database (DB)
-  static Future<Database?> get db async {
-
-    if (_db != null) {
-      return _db;
-    }
-    _db =  await initDb();
-    return _db;
+      // id: the id of a student
+     // studentName, studentAge,studentGender, studentAverageScore : name, age ender, average score of a student
+    // created_at: the time that the item was created. It will be automatically handled by SQLite
   }
 
-  static Future<Database?> initDb() async {
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path= join(documentsDirectory.path, DB_Name);
-    var db = await openDatabase(path, version: Version, onCreate: _onCreate);
-    return db;
-  }
-
-  static Future<void> _onCreate(Database db, int intVersion) async {
-    await db.execute("CREATE TABLE $Table_Student ("
-        " $C_StudentID TEXT, "
-        " $C_StudentName TEXT, "
-        " $C_StudentAge TEXT, "
-        " $C_StudentGender TEXT, "
-        " $C_StudentAverageScore TEXT,"
-        " $C_CreateAt TEXT, "
-        " PRIMARY KEY ($C_StudentID)"
-        ")");
+  static Future<Database> db() async {
+    return openDatabase(
+      'student_mtl.db', version: 1,
+      onCreate: (Database database, int version) async {
+        await createTables(database);
+      },
+    );
   }
 
   ///CRUD
 
   ///Add method
-  static Future<int?> addStudent(StudentModel student) async {
-    var dbClient = await db;
-    int? id = await dbClient?.insert(Table_Student, student.toMap());
+  static Future<int> addStudent(String studentName, String studentAge, String studentGender, String studentAverageScore) async {
+    final db = await DatabaseHelper.db();
+
+    final data = {
+      'studentName': studentName,
+      'studentAge': studentAge,
+      'studentGender': studentGender,
+      'studentAverageScore': studentAverageScore
+    };
+    final id = await db.insert('students', data);
     return id;
   }
 
   ///GetAllStudent method
 
-  static Future<List<StudentModel>> getAllStudents() async {
-    var dbClient = await db;
-    final List<StudentModel>? maps = await dbClient?.rawQuery('SELECT * FROM $Table_Student');
-
-    if (maps != null) {
-      return List.generate(maps.length, (i) {
-        return StudentModel(
-          studentId: maps[i]['studentId'],
-          studentName: maps[i]['studentName'],
-          studentAge: maps[i]['studentAge'],
-          studentGender: maps[i]['studentGender'],
-          studentAverageScore: maps[i]['studentAverageScore'],
-        createAt: maps[i]['createAt'],
-        );
-      });
-    } else {
-      return []; // Return an empty list if maps is null
-    }
+  static Future<List<Map<String, dynamic>>> getAllStudents() async {
+    final db = await DatabaseHelper.db();
+    return db.query('students', orderBy: "studentId");
   }
 
-  Future<StudentModel?> getStudentById(String studentId) async {
-    var dbClient = await db;
-    var res = await dbClient?.rawQuery("SELECT * FROM $Table_Student WHERE "
-        "$C_StudentID = '$studentId'");
+  ///GetStudent method
 
-    if (res?.isNotEmpty ?? false) {
-      return StudentModel.fromMap(res!.first);
-    }
-
-    return null;
+  static Future<List<Map<String, dynamic>>> getStudent(int studentId) async {
+    final db = await DatabaseHelper.db();
+    return db.query('students', where: "studentId = ?", whereArgs: [studentId], limit: 1);
   }
-
 
   ///Update method
 
-  static Future<void> updateStudent(StudentModel student) async {
-    var dbClient = await db;
-    var res = await dbClient?.update(Table_Student, student.toMap(),
-        where: '$C_StudentID = ?', whereArgs: [student.studentId]);
-    print(res);
-    print(student.studentId);
+  static Future<List<Map<String, dynamic>>> getSpecificStudent(int studentId) async {
+    final db = await DatabaseHelper.db();
+    return db.query('students', where: "studentId = ?", whereArgs: [studentId], limit: 1);
   }
 
-/// Delete method
-static Future<int?> deleteStudent(String studentId) async {
-  var dbClient = await db;
-  var res = await dbClient?.delete(Table_Student, where: '$C_StudentID = ?', whereArgs: [studentId]);
-  return res;
+  // Update an item by id
+  static Future<int?> updateStudent(int studentId,
+      String studentName, String studentAge, String studentGender, String studentAverageScore) async {
+    final db = await DatabaseHelper.db();
+
+    final data = {
+      'studentName': studentName,
+      'studentAge': studentAge,
+      'studentGender': studentGender,
+      'studentAverageScore': studentAverageScore,
+      'createdAt': DateTime.now().toString()
+    };
+  }
+
+  /// Delete method
+  static Future<void> deleteItem(int? studentId) async {
+    final db = await DatabaseHelper.db();
+    try {
+      await db.delete("students", where: "studentId = ?", whereArgs: [studentId]);
+    } catch (error) {
+      debugPrint("Có lỗi: $error");
+    }
+  }
+
 }
-
-
-  }
-
-
