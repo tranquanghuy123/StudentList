@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
+import 'package:screen_loader/screen_loader.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:studentlist/Home_Screen.dart';
 import 'package:studentlist/Screen/class_list_screen.dart';
 import 'package:studentlist/Screen/home_screen1.dart';
 
@@ -9,6 +9,12 @@ import 'package:studentlist/Screen/home_screen1.dart';
 void main() async{
 
   WidgetsFlutterBinding.ensureInitialized();
+  configScreenLoader(
+    loader: const AlertDialog(
+      title: Text('Gobal Loader..'),
+    ),
+    bgBlur: 20.0,
+  );
   runApp(const MyApp());
 }
 

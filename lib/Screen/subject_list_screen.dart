@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:studentlist/DatabaseHelper.dart';
+import 'package:studentlist/data/DatabaseHelper.dart';
+import 'package:studentlist/model/subject_model.dart';
 import 'package:studentlist/status_state.dart';
 
 class SubjectListScreen extends StatefulWidget {
@@ -19,8 +20,8 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
   ///DatabaseHelper
   final DatabaseHelper dbHelper = DatabaseHelper();
 
-  // All classes
-  List<Map<String, dynamic>> _subjects = [];
+  // All subject
+  List<SubjectModel>? _subjects;
 
   ///status state
   StatusState statusState = StatusState.init;
@@ -52,19 +53,37 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
   }
 
   // Insert class
-  Future<void> _addSubject() async {
-    await DatabaseHelper.addSubject(_subjectNameController.text);
+  Future<void> _addSubject(SubjectModel subject) async {
+    String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+    var subject = SubjectModel.parameter(
+        subjectName: _subjectNameController.text,
+        createAt: createAt);
+    try {
+      await DatabaseHelper.addSubject(subject);
+      Navigator.of(context).pop();
+    } catch (e) {
+      // Handle the error, e.g., show an error message
+    }
     _initDb();
   }
 
   // Update an existing journal
-  Future<void> _updateSubject(int id) async {
-    await DatabaseHelper.updateSubject(id, _subjectNameController.text);
+  Future<void> _updateSubject(SubjectModel subject) async {
+    String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+    var subject = SubjectModel.parameter(
+        subjectName: _subjectNameController.text,
+        createAt: createAt);
+    try {
+      await DatabaseHelper.updateSubject(subject);
+      Navigator.of(context).pop();
+    } catch (e) {
+      // Handle the error, e.g., show an error message
+    }
     _initDb();
   }
 
   // Delete an item
-  void _deleteSubject(int? id) async {
+  void _deleteSubject(int id) async {
     await DatabaseHelper.deleteSubject(id);
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Xóa môn học thành công!'),
@@ -93,19 +112,26 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
         ),
         floatingActionButton: FloatingActionButton(
           child: const Icon(Icons.add),
-          onPressed: () => _showForm(null),
+          onPressed: () => _showForm,
         ),
         body: buildList()
     );
   }
 
-  void _showForm(int? id) async {
+  void _showForm(int id) async {
+    // id == null -> create new item
+    // id != null -> update an existing item
+    String creatAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+    var existingSubject = SubjectModel(
+        subjectId: id,
+        subjectName: _subjectNameController.text,
+        createAt: creatAt
+    );
     if (id != null) {
-      // id == null -> create new item
-      // id != null -> update an existing item
-      final existingClass =
-      _subjects.firstWhere((element) => element['subjectId'] == id);
-      _subjectNameController.text = existingClass['subjectName'];
+      _updateSubject(existingSubject);
+    }
+    else{
+      _addSubject(existingSubject);
     }
 
     showModalBottomSheet(
@@ -165,10 +191,10 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
                         if (_formKey.currentState!.validate()) {
                           // Add student
                           if (id == null) {
-                            await _addSubject();
+                            await _addSubject(existingSubject);
                           }
                           if (id != null) {
-                            await _updateSubject(id);
+                            await _updateSubject(existingSubject);
                           }
                         }
                         if (_formKey.currentState!.validate()) {
@@ -199,14 +225,14 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
         return CircularProgressIndicator();
       case StatusState.success:
         return ListView.builder(
-          itemCount: _subjects.length,
+          itemCount: _subjects?.length,
           itemBuilder: (context, index) => Card(
             color: Colors.blue[200],
             margin: const EdgeInsets.all(15),
             child: ListTile(
                 leading: const Icon(Icons.library_books),
                 title: Text(
-                    '${_subjects[index]['subjectName']}'),
+                    '${_subjects?[index].subjectName}'),
                 trailing: SizedBox(
                   width: 100,
                   child: Row(
@@ -214,7 +240,7 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
                       IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () {
-                            _showForm(_subjects[index]['classId']);
+                            _showForm(_subjects![index].subjectId);
                           }),
                       IconButton(
                           icon: const Icon(Icons.delete),
@@ -230,9 +256,9 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
                                       TextButton(
                                         onPressed: () {
                                           print(
-                                              'id là: ${_subjects[index]['subjectId']}');
+                                              'id là: ${_subjects![index].subjectId}');
                                           _deleteSubject(
-                                              _subjects[index]['subjectId']);
+                                              _subjects![index].subjectId);
                                           Navigator.pop(context, 'Xác nhận');
                                         },
                                         child: const Text('Xác nhận'),

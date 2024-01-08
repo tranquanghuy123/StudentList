@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:studentlist/DatabaseHelper.dart';
+import 'package:studentlist/data/DatabaseHelper.dart';
+import 'package:studentlist/model/class_model.dart';
+import 'package:studentlist/model/student_model.dart';
 import 'package:studentlist/status_state.dart';
 
 class ClassListScreen extends StatefulWidget {
@@ -14,14 +16,14 @@ class _ClassListScreenState extends State<ClassListScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _classNameController = TextEditingController();
-  final TextEditingController _classAverageScoreController = TextEditingController();
-
+  final TextEditingController _classAverageScoreController =
+      TextEditingController();
 
   ///DatabaseHelper
-  final DatabaseHelper dbHelper = DatabaseHelper();
+  late DatabaseHelper dbHelper;
 
   // All classes
-  List<Map<String, dynamic>> _classes = [];
+  List<ClassModel>? _classes;
 
   ///status state
   StatusState statusState = StatusState.init;
@@ -34,7 +36,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
     print(data);
     if (data.isEmpty) {
       setState(() {
-        _classes = [];
+        _classes = null;
         statusState = StatusState.fail;
       });
     } else {
@@ -54,18 +56,39 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
   // Insert class
   Future<void> _addClass() async {
-    await DatabaseHelper.addClass(_classNameController.text, _classAverageScoreController.text);
+    String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+    var classes = ClassModel.parameter(
+      className: _classNameController.text,
+      classAverageScore: _classAverageScoreController.text,
+      createAt: createAt,
+    );
+    try {
+      await DatabaseHelper.addClass(classes);
+      Navigator.of(context).pop();
+    } catch (e) {
+      // Handle the error, e.g., show an error message
+    }
+  }
+
+  // Update class
+  Future<void> _updateClass(ClassModel classes) async {
+    String createAt =
+        DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+    final classes = ClassModel.parameter(
+        className: _classNameController.text,
+        classAverageScore: _classAverageScoreController.text,
+        createAt: createAt);
+    try {
+      await DatabaseHelper.updateClass(classes);
+      Navigator.of(context).pop();
+    } catch (e) {
+      // Handle the error, e.g., show an error message
+    }
     _initDb();
   }
 
-  // Update an existing journal
-  Future<void> _updateClass(int id) async {
-    await DatabaseHelper.updateClass(id, _classNameController.text, _classAverageScoreController.text);
-    _initDb();
-  }
-
-  // Delete an item
-  void _deleteClass(int? id) async {
+  // Delete class
+  void _deleteClass(int id) async {
     await DatabaseHelper.deleteClass(id);
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Xóa lớp học thành công!'),
@@ -74,42 +97,68 @@ class _ClassListScreenState extends State<ClassListScreen> {
     _initDb();
   }
 
+
   @override
   Widget build(BuildContext context) {
     double widthScreen = MediaQuery.of(context).size.width;
     double heightScreen = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Danh sách lớp học',
-          style: TextStyle(color: Colors.white),
+        appBar: AppBar(
+          title: const Text(
+            'Danh sách lớp học',
+            style: TextStyle(color: Colors.white),
+          ),
+          leading: IconButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: 30,
+            ),
+          ),
+          backgroundColor: Colors.blue,
         ),
-        leading: IconButton(
-          onPressed: (){
-            Navigator.of(context).pop();
-          },
-          icon: Icon(Icons.arrow_back, color: Colors.white, size: 30,),
+        floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.add),
+          onPressed: () => _showForm,
         ),
-        backgroundColor: Colors.blue,
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () => _showForm(null),
-      ),
-      body: buildList()
-    );
+        body: buildList());
   }
 
-  void _showForm(int? id) async {
-    if (id != null) {
-      // id == null -> create new item
-      // id != null -> update an existing item
-      final existingClass =
-          _classes.firstWhere((element) => element['classId'] == id);
-      _classNameController.text = existingClass['className'];
-    _classAverageScoreController.text = existingClass['classAverageScore'];
-    }
+  void addClass() {
+    _showForm('Thêm lớp học', () async {
+      String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+      var classes = ClassModel.parameter(
+          className: _classNameController.text,
+          classAverageScore: _classAverageScoreController.text,
+          createAt: createAt);
+      DatabaseHelper.addClass(classes);
+      setState(() {});
+      _classNameController.clear();
+      _classAverageScoreController.clear();
+      Navigator.of(context).pop();
+    });
+  }
+  void updateClass(ClassModel classes) {
+    String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+    _classNameController.text = classes.className;
+    _classAverageScoreController.text = classes.classAverageScore;
+    _showForm('Sửa lớp học', () async {
+      var updateClasses = ClassModel.parameter(
+          className: _classNameController.text,
+          classAverageScore: _classAverageScoreController.text,
+          createAt: createAt);
+      DatabaseHelper.updateClass(classes);
+      setState(() {});
+      _classNameController.clear();
+      _classAverageScoreController.clear();
+      Navigator.of(context).pop();
+    });
+  }
 
+  void _showForm(String functionTitle, Function()? onPressed) async {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -180,26 +229,8 @@ class _ClassListScreenState extends State<ClassListScreen> {
                       height: 40,
                     ),
                     ElevatedButton(
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          // Add student
-                          if (id == null) {
-                            await _addClass();
-                          }
-                          if (id != null) {
-                            await _updateClass(id);
-                          }
-                        }
-                        if (_formKey.currentState!.validate()) {
-                          // If the form is valid, perform some action
-                          _formKey.currentState!.save();
-                          // Clear the text fields
-                          _classNameController.text = '';
-                          _classAverageScoreController.text = '';
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      child: Text(id == null ? 'Thêm lớp học' : 'Cập nhật'),
+                      onPressed: onPressed,
+                      child: Text(functionTitle),
                     )
                   ],
                 ),
@@ -216,18 +247,18 @@ class _ClassListScreenState extends State<ClassListScreen> {
       case StatusState.init:
         return Container();
       case StatusState.loading:
-        return CircularProgressIndicator();
+        return const CircularProgressIndicator();
       case StatusState.success:
         return ListView.builder(
-          itemCount: _classes.length,
+          itemCount: _classes?.length,
           itemBuilder: (context, index) => Card(
             color: Colors.blue[200],
             margin: const EdgeInsets.all(15),
             child: ListTile(
                 leading: const Icon(Icons.class_),
-                title: Text(
-                    '${_classes[index]['className']}'),
-                subtitle: Text('Điểm trung bình: ${_classes[index]['classAverageScore']}'),
+                title: Text('${_classes?[index].className}'),
+                subtitle: Text(
+                    'Điểm trung bình: ${_classes?[index].classAverageScore}'),
                 trailing: SizedBox(
                   width: 100,
                   child: Row(
@@ -235,7 +266,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
                       IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () {
-                            _showForm(_classes[index]['classId']);
+                            _showForm();
                           }),
                       IconButton(
                           icon: const Icon(Icons.delete),
@@ -251,9 +282,9 @@ class _ClassListScreenState extends State<ClassListScreen> {
                                       TextButton(
                                         onPressed: () {
                                           print(
-                                              'id là: ${_classes[index]['classId']}');
+                                              'id là: ${_classes![index].classId}');
                                           _deleteClass(
-                                              _classes[index]['classId']);
+                                              _classes![index].classId);
                                           Navigator.pop(context, 'Xác nhận');
                                         },
                                         child: const Text('Xác nhận'),
