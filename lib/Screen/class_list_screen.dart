@@ -55,110 +55,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
   }
 
   // Insert class
-  Future<void> _addClass() async {
-    String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
-    var classes = ClassModel.parameter(
-      className: _classNameController.text,
-      classAverageScore: _classAverageScoreController.text,
-      createAt: createAt,
-    );
-    try {
-      await DatabaseHelper.addClass(classes);
-      Navigator.of(context).pop();
-    } catch (e) {
-      // Handle the error, e.g., show an error message
-    }
-  }
-
-  // Update class
-  Future<void> _updateClass(ClassModel classes) async {
-    String createAt =
-        DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
-    final classes = ClassModel.parameter(
-        className: _classNameController.text,
-        classAverageScore: _classAverageScoreController.text,
-        createAt: createAt);
-    try {
-      await DatabaseHelper.updateClass(classes);
-      Navigator.of(context).pop();
-    } catch (e) {
-      // Handle the error, e.g., show an error message
-    }
-    _initDb();
-  }
-
-  // Delete class
-  void _deleteClass(int id) async {
-    await DatabaseHelper.deleteClass(id);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Xóa lớp học thành công!'),
-      backgroundColor: Colors.green,
-    ));
-    _initDb();
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-    double widthScreen = MediaQuery.of(context).size.width;
-    double heightScreen = MediaQuery.of(context).size.height;
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Danh sách lớp học',
-            style: TextStyle(color: Colors.white),
-          ),
-          leading: IconButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            icon: const Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-              size: 30,
-            ),
-          ),
-          backgroundColor: Colors.blue,
-        ),
-        floatingActionButton: FloatingActionButton(
-          child: const Icon(Icons.add),
-          onPressed: () => _showForm,
-        ),
-        body: buildList());
-  }
-
-  void addClass() {
-    _showForm('Thêm lớp học', () async {
-      String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
-      var classes = ClassModel.parameter(
-          className: _classNameController.text,
-          classAverageScore: _classAverageScoreController.text,
-          createAt: createAt);
-      DatabaseHelper.addClass(classes);
-      setState(() {});
-      _classNameController.clear();
-      _classAverageScoreController.clear();
-      Navigator.of(context).pop();
-    });
-  }
-  void updateClass(ClassModel classes) {
-    String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
-    _classNameController.text = classes.className;
-    _classAverageScoreController.text = classes.classAverageScore;
-    _showForm('Sửa lớp học', () async {
-      var updateClasses = ClassModel.parameter(
-          className: _classNameController.text,
-          classAverageScore: _classAverageScoreController.text,
-          createAt: createAt);
-      DatabaseHelper.updateClass(classes);
-      setState(() {});
-      _classNameController.clear();
-      _classAverageScoreController.clear();
-      Navigator.of(context).pop();
-    });
-  }
-
-  void _showForm(String functionTitle, Function()? onPressed) async {
+  void _addClass() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -229,8 +126,30 @@ class _ClassListScreenState extends State<ClassListScreen> {
                       height: 40,
                     ),
                     ElevatedButton(
-                      onPressed: onPressed,
-                      child: Text(functionTitle),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+                          var classes = ClassModel.parameter(
+                            className: _classNameController.text,
+                            classAverageScore: _classAverageScoreController.text,
+                            createAt: createAt,
+                          );
+                          setState(() {
+                            try {
+                              DatabaseHelper.addClass(classes);
+                              // Clear the text fields
+                              _classNameController.text = '';
+                              _classAverageScoreController.text = '';
+                              Navigator.of(context).pop();
+                            } catch (e) {
+                              // Handle the error, e.g., show an error message
+                            }
+                          });
+
+                        }
+
+                      },
+                      child: Text('Thêm lớp học'),
                     )
                   ],
                 ),
@@ -241,6 +160,181 @@ class _ClassListScreenState extends State<ClassListScreen> {
       ),
     );
   }
+
+  // Update class
+  Future<void> _updateClass(int id) async {
+    String createAt =
+        DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+    final classes = ClassModel.parameter(
+        className: _classNameController.text,
+        classAverageScore: _classAverageScoreController.text,
+        createAt: createAt);
+    try {
+      await DatabaseHelper.updateClass(classes);
+      Navigator.of(context).pop();
+    } catch (e) {
+      // Handle the error, e.g., show an error message
+    }
+    _initDb();
+  }
+
+  // Delete class
+  void _deleteClass(int id) async {
+    await DatabaseHelper.deleteClass(id);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Xóa lớp học thành công!'),
+      backgroundColor: Colors.green,
+    ));
+    _initDb();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    double widthScreen = MediaQuery.of(context).size.width;
+    double heightScreen = MediaQuery.of(context).size.height;
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Danh sách lớp học',
+            style: TextStyle(color: Colors.white),
+          ),
+          leading: IconButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: 30,
+            ),
+          ),
+          backgroundColor: Colors.blue,
+        ),
+        floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.add),
+          onPressed: () => _addClass(),
+        ),
+        body: buildList());
+  }
+
+  // void addClass() {
+  //   _showForm;
+  //   {
+  //     String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+  //     var classes = ClassModel.parameter(
+  //         className: _classNameController.text,
+  //         classAverageScore: _classAverageScoreController.text,
+  //         createAt: createAt);
+  //     DatabaseHelper.addClass(classes);
+  //     setState(() {});
+  //     _classNameController.clear();
+  //     _classAverageScoreController.clear();
+  //     Navigator.of(context).pop();
+  //   });
+  // }
+
+
+  // void updateClass(ClassModel classes) {
+  //   String createAt = DateTime.now().millisecondsSinceEpoch.remainder(100000).toString();
+  //   _classNameController.text = classes.className;
+  //   _classAverageScoreController.text = classes.classAverageScore;
+  //   _showForm('Sửa lớp học', () async {
+  //     var updateClasses = ClassModel.parameter(
+  //         className: _classNameController.text,
+  //         classAverageScore: _classAverageScoreController.text,
+  //         createAt: createAt);
+  //     DatabaseHelper.updateClass(classes);
+  //     setState(() {});
+  //     _classNameController.clear();
+  //     _classAverageScoreController.clear();
+  //     Navigator.of(context).pop();
+  //   });
+  // }
+
+  // void _showForm() async {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     constraints: const BoxConstraints(
+  //       maxWidth: double.infinity,
+  //       maxHeight: double.infinity,
+  //     ),
+  //     builder: (BuildContext context) => GestureDetector(
+  //       onTap: () {
+  //         FocusScopeNode currentFocus = FocusScope.of(context);
+  //         if (!currentFocus.hasPrimaryFocus) {
+  //           currentFocus.unfocus();
+  //         }
+  //       },
+  //       child: Container(
+  //         padding: const EdgeInsets.only(
+  //           top: 15,
+  //           left: 15,
+  //           right: 15,
+  //           // this will prevent the soft keyboard from covering the text fields
+  //           bottom: 15,
+  //         ),
+  //         color: Colors.white,
+  //         height: 700,
+  //         child: Column(
+  //           children: [
+  //             const Text(
+  //               'Nhập lớp học',
+  //               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+  //             ),
+  //             const SizedBox(height: 8),
+  //             Form(
+  //               key: _formKey,
+  //               child: Column(
+  //                 mainAxisSize: MainAxisSize.min,
+  //                 crossAxisAlignment: CrossAxisAlignment.end,
+  //                 children: [
+  //                   TextFormField(
+  //                     controller: _classNameController,
+  //                     validator: (value) {
+  //                       if (value == null || value.isEmpty) {
+  //                         return 'Vui lòng nhập tên lớp';
+  //                       } else if (value.length < 2) {
+  //                         return 'Tên lớp không hợp lệ. Tên lớp từ 1(A-D) - 12(A-D)';
+  //                       }
+  //                     },
+  //                     keyboardType: TextInputType.text,
+  //                     decoration: const InputDecoration(hintText: 'Tên lớp'),
+  //                   ),
+  //                   const SizedBox(
+  //                     height: 10,
+  //                   ),
+  //                   TextFormField(
+  //                     controller: _classAverageScoreController,
+  //                     validator: (value) {
+  //                       if (value == null || value.isEmpty) {
+  //                         return 'Vui lòng nhập điểm trung bình lớp';
+  //                       } else if (int.parse(value) < 1 ||
+  //                           int.parse(value) > 10) {
+  //                         return 'Điểm trung bình không hợp lệ (0 - 10). Xin vui lòng nhập lại';
+  //                       }
+  //                     },
+  //                     keyboardType: TextInputType.text,
+  //                     decoration: const InputDecoration(
+  //                         hintText: 'Điểm trung bình lớp'),
+  //                   ),
+  //                   const SizedBox(
+  //                     height: 40,
+  //                   ),
+  //                   ElevatedButton(
+  //                     onPressed: onPressed,
+  //                     child: Text(functionTitle),
+  //                   )
+  //                 ],
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget buildList() {
     switch (statusState) {
@@ -266,7 +360,6 @@ class _ClassListScreenState extends State<ClassListScreen> {
                       IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () {
-                            _updateClass(_classes);
                           }),
                       IconButton(
                           icon: const Icon(Icons.delete),
