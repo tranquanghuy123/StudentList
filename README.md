@@ -32,9 +32,23 @@ B3: Xác định được những sự kiện cần sử lí (nút thêm, sửa,
   + Sử dụng widget floating action button
   + Khi nhấn vào sẽ hiển thị ra một form cho người dùng điền vào (widget ModalBottomSheet)
   + Form hiển thị sẽ gồm 2 TestFormField nhập vào className và classAverageScore
-  
   + OnPress: (validate khi người dùng nhập k đúng yêu cầu của TestFormField về className và classAverageScore).
   + Sử dụng phương thức được thư viện sqlite data local cung cấp để lưu trữ thông tin sau khi đã nhập
   và đã validate
-    
+  
+- nút sửa (update class)
+  + Sử dụng widget IconButon(Icons.edit)
+  + Widget nằm ngay tại widget Card thông tin lớp để biết lớp nào sừa (classId)
+  + Khi nhấn vào sẽ hiển thị ra một form cho người dùng điền vào (widget ModalBottomSheet)
+  + Form hiển thị sẽ gồm 2 TestFormField nhập thông tin className và classAverageScore cần sửa
+  + OnPress: (validate khi người dùng nhập k đúng yêu cầu của TestFormField về className và classAverageScore).
+  + Sử dụng phương thức được thư viện sqlite data local cung cấp để cập nhật thông tin sau khi đã nhập
+
+- nút xóa (delete class)
+  + Sử dụng widget IconButon(Icons.delete)
+  + Widget nằm ngay tại widget Card thông tin lớp để biết lớp nào cần xóa (classId)
+  + Sau khi nhấn sẽ hiển thị một AlertDialog để hỏi người dùng thật sự muốn xóa (tránh xóa nhầm)
+  + OnPress: Khi nhấn vào sẽ gọi pt xóa được cung cấp bởi database local sqlite;
+  + Card thông tin lớp học đã được xóa
+  
 B4: clear bộ nhớ (dispose).
