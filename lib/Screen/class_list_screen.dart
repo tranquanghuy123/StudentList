@@ -266,7 +266,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
                       IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () {
-                            _showForm();
+                            _updateClass(_classes);
                           }),
                       IconButton(
                           icon: const Icon(Icons.delete),
