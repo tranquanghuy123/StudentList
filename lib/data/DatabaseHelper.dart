@@ -115,8 +115,7 @@ class DatabaseHelper {
   ///Add class method
   static Future<int?> addClass(ClassModel classes) async {
     var dbClient = await db;
-
-    int? classID = await dbClient?.insert(Table_Class, classes.toMap());
+    int? classID = await dbClient?.insert(Table_Class, classes.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
     return classID;
   }
 
