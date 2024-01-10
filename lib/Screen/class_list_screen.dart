@@ -51,12 +51,12 @@ class _ClassListScreenState extends State<ClassListScreen> {
   void initState() {
     _initDb();
     super.initState();
-    _initDb(); // Loading the diary when the app starts
   }
 
   // Insert class
-  void _addClass() {
-    showModalBottomSheet(
+  void _addClass() async{
+    List<ClassModel>? classes = await DatabaseHelper.getAllClasses();
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       constraints: const BoxConstraints(
@@ -139,12 +139,13 @@ class _ClassListScreenState extends State<ClassListScreen> {
                               _classNameController.text = '';
                               _classAverageScoreController.text = '';
                               Navigator.of(context).pop();
-                          List<ClassModel>? classes = await DatabaseHelper.getAllClasses();
+                          await Future.delayed(const Duration(seconds: 1));
+
                           setState(() {
                             _classes = classes;
                           });
 
-                          print('ádasdas: ${classes.last.className}');
+                          print('TQH: ${classes.last.className}');
                         }
 
                       },
