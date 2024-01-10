@@ -55,7 +55,6 @@ class _ClassListScreenState extends State<ClassListScreen> {
 
   // Insert class
   void _addClass() async{
-    List<ClassModel>? classes = await DatabaseHelper.getAllClasses();
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -141,11 +140,10 @@ class _ClassListScreenState extends State<ClassListScreen> {
                               Navigator.of(context).pop();
                           await Future.delayed(const Duration(seconds: 1));
 
-                          setState(() {
-                            _classes = classes;
-                          });
+                          // setState(() {
+                          //   _classes = classes;
+                          // });
 
-                          print('TQH: ${classes.last.className}');
                         }
 
                       },
@@ -159,6 +157,12 @@ class _ClassListScreenState extends State<ClassListScreen> {
         ),
       ),
     );
+
+    List<ClassModel>? classes = await DatabaseHelper.getAllClasses();
+    setState(() {
+      _classes = classes;
+    });
+    
   }
 
   // Update class
